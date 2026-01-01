@@ -6,10 +6,14 @@ Main workflow that monitors Close.io for booked calls and sends nurture emails.
 
 import os
 import json
+import sys
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
+
+# Add execution directory to path for imports
+sys.path.insert(0, os.path.dirname(__file__))
 
 from close_io_client import CloseIOClient
 from send_email import EmailSender

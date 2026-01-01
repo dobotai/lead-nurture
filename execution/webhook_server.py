@@ -8,6 +8,11 @@ and instantly enrolls leads into the nurture workflow.
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
+import sys
+
+# Add execution directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+
 from enroll_lead import LeadEnrollment
 
 

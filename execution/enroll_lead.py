@@ -12,6 +12,9 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Optional
 from dotenv import load_dotenv
 
+# Add execution directory to path for imports
+sys.path.insert(0, os.path.dirname(__file__))
+
 from close_io_client import CloseIOClient
 from send_email import EmailSender
 from email_templates import EmailTemplates
