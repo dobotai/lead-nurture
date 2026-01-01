@@ -9,12 +9,17 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
 import sys
+import threading
+import time
+from datetime import datetime, timezone
 
 # Add execution directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
 from enroll_lead import LeadEnrollment
 from close_io_client import CloseIOClient
+from send_email import EmailSender
+from email_templates import EmailTemplates
 
 
 class WebhookHandler(BaseHTTPRequestHandler):
@@ -285,14 +290,111 @@ class WebhookHandler(BaseHTTPRequestHandler):
         print(f"[{self.log_date_time_string()}] {format % args}")
 
 
+def send_scheduled_emails():
+    """Background thread that sends scheduled emails."""
+    print("Starting email scheduler thread...")
+
+    email_sender = EmailSender()
+    templates = EmailTemplates()
+    close_io = CloseIOClient()
+
+    state_file = os.path.join(os.path.dirname(__file__), '..', '.tmp', 'lead_nurture_state.json')
+
+    while True:
+        try:
+            # Load current state
+            if not os.path.exists(state_file):
+                time.sleep(30)
+                continue
+
+            with open(state_file, 'r') as f:
+                state = json.load(f)
+
+            now = datetime.now(timezone.utc)
+
+            # Check each lead for scheduled emails
+            for lead_id, lead_data in state.get('leads', {}).items():
+                sent_emails = lead_data.get('sent_emails', [])
+                email_schedule = lead_data.get('email_schedule', {})
+
+                # Check each scheduled email
+                for email_type, scheduled_time_str in email_schedule.items():
+                    # Skip if already sent
+                    if email_type in sent_emails:
+                        continue
+
+                    # Skip welcome (sent immediately on enrollment)
+                    if email_type == 'welcome':
+                        continue
+
+                    # Parse scheduled time
+                    scheduled_time = datetime.fromisoformat(scheduled_time_str.replace('Z', '+00:00'))
+
+                    # Check if it's time to send
+                    if now >= scheduled_time:
+                        print(f"\nSending {email_type} email to {lead_data.get('email')}")
+
+                        # Format call time
+                        call_time = datetime.fromisoformat(lead_data['call_time'].replace('Z', '+00:00'))
+                        formatted_call_time = call_time.strftime("%A, %b %d at %I:%M %p %Z")
+
+                        # Get template
+                        if email_type == 'midpoint':
+                            email_data = templates.get_midpoint_email(lead_data['name'], formatted_call_time)
+                        elif email_type == 'day_before':
+                            email_data = templates.get_day_before_email(lead_data['name'], formatted_call_time)
+                        elif email_type == 'hour_before':
+                            email_data = templates.get_hour_before_email(lead_data['name'], formatted_call_time)
+                        else:
+                            continue
+
+                        # Send email
+                        success = email_sender.send_email(
+                            to_email=lead_data['email'],
+                            subject=email_data['subject'],
+                            html_content=email_data['html'],
+                            text_content=email_data['text'],
+                            lead_id=lead_id
+                        )
+
+                        if success:
+                            # Mark as sent
+                            sent_emails.append(email_type)
+                            lead_data['sent_emails'] = sent_emails
+
+                            # Save state
+                            with open(state_file, 'w') as f:
+                                json.dump(state, f, indent=2)
+
+                            # Add note to Close.io
+                            close_io.add_note_to_lead(
+                                lead_id,
+                                f"Lead nurture email sent: {email_type} - {email_data['subject']}"
+                            )
+
+                            print(f"✓ {email_type} email sent to {lead_data['email']}")
+
+        except Exception as e:
+            print(f"Error in email scheduler: {str(e)}")
+
+        # Check every 30 seconds
+        time.sleep(30)
+
+
 def run_server(port=8080):
-    """Run the webhook server."""
+    """Run the webhook server with background email scheduler."""
+    # Start background email scheduler thread
+    scheduler_thread = threading.Thread(target=send_scheduled_emails, daemon=True)
+    scheduler_thread.start()
+
+    # Start webhook server
     server_address = ('', port)
     httpd = HTTPServer(server_address, WebhookHandler)
     print(f"Lead Nurture Webhook Server running on port {port}")
-    print(f"Endpoint: http://localhost:{port}/enroll")
+    print(f"Endpoint: http://localhost:{port}/closeio-webhook")
     print(f"Health check: http://localhost:{port}/health")
-    print("\nWaiting for webhook calls...")
+    print("\nEmail scheduler running (checking every 30s)")
+    print("Waiting for webhook calls...")
     httpd.serve_forever()
 
 
