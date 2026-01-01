@@ -1,0 +1,12 @@
+# Core dependencies
+python-dotenv
+requests
+
+# Optional: Other integrations (uncomment if needed)
+# anthropic
+# openai
+# google-auth
+# google-auth-oauthlib
+# google-auth-httplib2
+# google-api-python-client
+# modal

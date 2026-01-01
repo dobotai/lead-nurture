@@ -1,0 +1,9 @@
+{
+  "webhooks": {
+    "example": {
+      "directive": "directives/example_directive.md",
+      "description": "Example webhook - replace with your actual webhooks",
+      "allowed_tools": ["send_email", "read_sheet", "update_sheet"]
+    }
+  }
+}
