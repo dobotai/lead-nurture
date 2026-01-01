@@ -78,31 +78,60 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 event = data.get('event')
 
-                # Only process lead.created events
-                if event == 'lead.created':
-                    lead_data = data.get('data', {})
-                    lead_id = lead_data.get('id')
+                # Process opportunity.status_change events
+                if event == 'opportunity.status_change':
+                    opp_data = data.get('data', {})
+                    lead_id = opp_data.get('lead_id')
+                    new_status = opp_data.get('status_label', '').lower()
+                    old_status = opp_data.get('old_status_label', '').lower()
 
-                    print(f"\nNew lead created in Close.io: {lead_id}")
+                    print(f"\nOpportunity status changed for lead {lead_id}: {old_status} → {new_status}")
 
-                    # Get call time from lead activities
-                    call_time = self._extract_call_time(lead_id)
+                    # Check if status changed TO "Call Booked"
+                    if new_status == 'call booked':
+                        print(f"Call booked! Enrolling lead {lead_id} in nurture workflow")
 
-                    # Enroll lead in nurture workflow
-                    enrollment = LeadEnrollment()
-                    result = enrollment.enroll_lead(
-                        lead_id=lead_id,
-                        call_time=call_time,
-                        send_welcome_immediately=True
-                    )
+                        # Get call time from lead activities
+                        call_time = self._extract_call_time(lead_id)
 
-                    # Send response
-                    self.send_response(200 if result['success'] else 400)
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps(result).encode('utf-8'))
+                        # Enroll lead in nurture workflow
+                        enrollment = LeadEnrollment()
+                        result = enrollment.enroll_lead(
+                            lead_id=lead_id,
+                            call_time=call_time,
+                            send_welcome_immediately=True
+                        )
 
-                    print(f"Lead enrolled: {result.get('email', 'unknown')}")
+                        # Send response
+                        self.send_response(200 if result['success'] else 400)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps(result).encode('utf-8'))
+
+                        print(f"Lead enrolled: {result.get('email', 'unknown')}")
+
+                    # Check if status changed FROM "Call Booked" to anything else
+                    elif old_status == 'call booked' and new_status != 'call booked':
+                        print(f"Status changed from Call Booked! Cancelling nurture for lead {lead_id}")
+
+                        # Cancel nurture workflow
+                        result = self._cancel_nurture(lead_id)
+
+                        # Send response
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps(result).encode('utf-8'))
+
+                        print(f"Nurture cancelled for lead: {lead_id}")
+
+                    else:
+                        # Status change not relevant to nurture workflow
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        response = {'status': 'ignored', 'reason': 'status not relevant'}
+                        self.wfile.write(json.dumps(response).encode('utf-8'))
 
                 else:
                     # Ignore other events
@@ -179,6 +208,77 @@ class WebhookHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(f"Error extracting call time: {str(e)}")
             return None
+
+    def _cancel_nurture(self, lead_id: str):
+        """
+        Cancel nurture workflow for a lead by removing them from state.
+
+        Args:
+            lead_id: Close.io lead ID
+
+        Returns:
+            dict with success status and message
+        """
+        try:
+            state_file = os.path.join(os.path.dirname(__file__), '..', '.tmp', 'lead_nurture_state.json')
+
+            # Load current state
+            if os.path.exists(state_file):
+                with open(state_file, 'r') as f:
+                    state = json.load(f)
+            else:
+                return {'success': False, 'message': 'No active nurture workflows found'}
+
+            # Check if lead exists in state
+            if lead_id not in state.get('enrolled_leads', {}):
+                return {'success': False, 'message': f'Lead {lead_id} not found in nurture workflow'}
+
+            # Get lead info before removing
+            lead_info = state['enrolled_leads'][lead_id]
+            email = lead_info.get('email', 'unknown')
+
+            # Remove lead from state
+            del state['enrolled_leads'][lead_id]
+
+            # Save updated state
+            with open(state_file, 'w') as f:
+                json.dump(state, f, indent=2)
+
+            # Log the cancellation
+            log_file = os.path.join(os.path.dirname(__file__), '..', '.tmp', 'nurture_log.json')
+            log_entry = {
+                'timestamp': datetime.now().isoformat(),
+                'action': 'cancel_nurture',
+                'lead_id': lead_id,
+                'email': email,
+                'reason': 'opportunity_status_changed'
+            }
+
+            # Append to log
+            logs = []
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    logs = json.load(f)
+
+            logs.append(log_entry)
+
+            with open(log_file, 'w') as f:
+                json.dump(logs, f, indent=2)
+
+            print(f"Cancelled nurture for lead {lead_id} ({email})")
+
+            return {
+                'success': True,
+                'message': f'Nurture cancelled for lead {lead_id}',
+                'email': email
+            }
+
+        except Exception as e:
+            print(f"Error cancelling nurture: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
 
     def log_message(self, format, *args):
         """Custom log format."""
