@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["python311"]
+
+[phases.install]
+cmds = ["pip install -r execution/requirements.txt"]
+
+[start]
+cmd = "python execution/webhook_server.py $PORT"
