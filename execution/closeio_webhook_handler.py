@@ -1,81 +1,36 @@
 #!/usr/bin/env python3
 """
-Webhook Server for Lead Nurture
-Simple HTTP server that receives webhook calls from lead capture systems
-and instantly enrolls leads into the nurture workflow.
+Close.io Webhook Handler
+Handles webhooks from Close.io when leads are created or updated.
+Automatically enrolls new leads into the nurture workflow.
 """
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
 import sys
+from datetime import datetime
 
 # Add execution directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.dirname(__file__))
 
 from enroll_lead import LeadEnrollment
 from close_io_client import CloseIOClient
 
 
-class WebhookHandler(BaseHTTPRequestHandler):
-    """Handles incoming webhook requests."""
+class CloseIOWebhookHandler(BaseHTTPRequestHandler):
+    """Handles incoming webhooks from Close.io."""
 
     def do_POST(self):
-        """Handle POST requests for lead enrollment."""
-        if self.path == '/enroll':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-
-            try:
-                # Parse JSON payload
-                data = json.loads(post_data.decode('utf-8'))
-
-                # Extract lead info
-                lead_id = data.get('lead_id')
-                email = data.get('email')
-                name = data.get('name')
-                call_time = data.get('call_time')
-                call_duration = data.get('call_duration', 30)
-
-                # Enroll lead
-                enrollment = LeadEnrollment()
-                result = enrollment.enroll_lead(
-                    lead_id=lead_id,
-                    email=email,
-                    name=name,
-                    call_time=call_time,
-                    call_duration=call_duration,
-                    send_welcome_immediately=True
-                )
-
-                # Send response
-                self.send_response(200 if result['success'] else 400)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode('utf-8'))
-
-                print(f"\nWebhook processed: {result.get('email', 'unknown')}")
-
-            except Exception as e:
-                # Error response
-                self.send_response(500)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                error_response = {
-                    'success': False,
-                    'error': str(e)
-                }
-                self.wfile.write(json.dumps(error_response).encode('utf-8'))
-                print(f"\nWebhook error: {str(e)}")
-
-        elif self.path == '/closeio-webhook':
-            # Handle Close.io webhooks
+        """Handle POST requests from Close.io webhooks."""
+        if self.path == '/closeio-webhook':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
 
             try:
                 # Parse Close.io webhook payload
                 data = json.loads(post_data.decode('utf-8'))
+
                 event = data.get('event')
 
                 # Only process lead.created events
@@ -83,7 +38,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     lead_data = data.get('data', {})
                     lead_id = lead_data.get('id')
 
-                    print(f"\nNew lead created in Close.io: {lead_id}")
+                    print(f"New lead created in Close.io: {lead_id}")
 
                     # Get call time from lead activities
                     call_time = self._extract_call_time(lead_id)
@@ -122,28 +77,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     'error': str(e)
                 }
                 self.wfile.write(json.dumps(error_response).encode('utf-8'))
-                print(f"\nClose.io webhook error: {str(e)}")
+                print(f"Webhook error: {str(e)}")
 
-        elif self.path == '/health':
-            # Health check endpoint
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            response = {'status': 'ok', 'service': 'lead-nurture-webhook'}
-            self.wfile.write(json.dumps(response).encode('utf-8'))
-
-        else:
-            self.send_response(404)
-            self.end_headers()
-
-    def do_GET(self):
-        """Handle GET requests."""
-        if self.path == '/health':
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            response = {'status': 'ok', 'service': 'lead-nurture-webhook'}
-            self.wfile.write(json.dumps(response).encode('utf-8'))
         else:
             self.send_response(404)
             self.end_headers()
@@ -186,13 +121,12 @@ class WebhookHandler(BaseHTTPRequestHandler):
 
 
 def run_server(port=8080):
-    """Run the webhook server."""
+    """Run the Close.io webhook server."""
     server_address = ('', port)
-    httpd = HTTPServer(server_address, WebhookHandler)
-    print(f"Lead Nurture Webhook Server running on port {port}")
-    print(f"Endpoint: http://localhost:{port}/enroll")
-    print(f"Health check: http://localhost:{port}/health")
-    print("\nWaiting for webhook calls...")
+    httpd = HTTPServer(server_address, CloseIOWebhookHandler)
+    print(f"Close.io Webhook Handler running on port {port}")
+    print(f"Endpoint: http://localhost:{port}/closeio-webhook")
+    print("\nWaiting for Close.io webhooks...")
     httpd.serve_forever()
 
 
