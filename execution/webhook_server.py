@@ -392,10 +392,11 @@ def run_server(port=8080):
     server_address = ('', port)
     httpd = HTTPServer(server_address, WebhookHandler)
     print(f"Lead Nurture Webhook Server running on port {port}")
-    print(f"Endpoint: http://localhost:{port}/closeio-webhook")
-    print(f"Health check: http://localhost:{port}/health")
-    print("\nEmail scheduler running (checking every 30s)")
-    print("Waiting for webhook calls...")
+    print(f"Endpoint: /closeio-webhook")
+    print(f"Health check: /health")
+    print(f"\nEmail scheduler: Active (checking every 30s)")
+    print(f"System ready. Waiting for Close.io webhooks...")
+    print(f"Deployment time: {datetime.now(timezone.utc).isoformat()}")
     httpd.serve_forever()
 
 
