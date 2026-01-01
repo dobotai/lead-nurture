@@ -230,15 +230,15 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 return {'success': False, 'message': 'No active nurture workflows found'}
 
             # Check if lead exists in state
-            if lead_id not in state.get('enrolled_leads', {}):
+            if lead_id not in state.get('leads', {}):
                 return {'success': False, 'message': f'Lead {lead_id} not found in nurture workflow'}
 
             # Get lead info before removing
-            lead_info = state['enrolled_leads'][lead_id]
+            lead_info = state['leads'][lead_id]
             email = lead_info.get('email', 'unknown')
 
             # Remove lead from state
-            del state['enrolled_leads'][lead_id]
+            del state['leads'][lead_id]
 
             # Save updated state
             with open(state_file, 'w') as f:
