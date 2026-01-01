@@ -83,8 +83,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 event = data.get('event')
 
-                # Process opportunity.status_change events
-                if event == 'opportunity.status_change':
+                # Process opportunity.updated events
+                if event == 'opportunity.updated':
                     opp_data = data.get('data', {})
                     lead_id = opp_data.get('lead_id')
                     new_status = opp_data.get('status_label', '').lower()
