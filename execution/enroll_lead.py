@@ -64,25 +64,23 @@ class LeadEnrollment:
             json.dump(logs, f, indent=2)
 
     def _calculate_email_times(self, call_time: datetime, booked_time: datetime) -> Dict[str, datetime]:
-        """Calculate when each email should be sent."""
+        """Calculate when each email should be sent - TEST MODE: 1 email per minute."""
         now = datetime.now(timezone.utc)
-        time_until_call = call_time - now
 
         email_times = {}
 
-        # Welcome: immediately (within 5 minutes of booking)
-        email_times['welcome'] = booked_time + timedelta(minutes=5)
+        # TEST SCHEDULE: Send emails every minute for testing
+        # Welcome: immediately
+        email_times['welcome'] = booked_time + timedelta(seconds=10)
 
-        # Hour before: 1 hour before call
-        email_times['hour_before'] = call_time - timedelta(hours=1)
+        # Minute 1: First follow-up
+        email_times['midpoint'] = now + timedelta(minutes=1)
 
-        # Day before: 24 hours before call
-        email_times['day_before'] = call_time - timedelta(hours=24)
+        # Minute 2: Second follow-up
+        email_times['day_before'] = now + timedelta(minutes=2)
 
-        # Midpoint: halfway between now and call (only if >48 hours away)
-        if time_until_call > timedelta(hours=48):
-            midpoint_time = now + (time_until_call / 2)
-            email_times['midpoint'] = midpoint_time
+        # Minute 3: Final reminder
+        email_times['hour_before'] = now + timedelta(minutes=3)
 
         return email_times
 
