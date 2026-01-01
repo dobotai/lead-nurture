@@ -86,9 +86,10 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 # Process opportunity.updated events
                 if event == 'opportunity.updated':
                     opp_data = data.get('data', {})
+                    previous_data = data.get('previous_data', {})
                     lead_id = opp_data.get('lead_id')
                     new_status = opp_data.get('status_label', '').lower()
-                    old_status = opp_data.get('old_status_label', '').lower()
+                    old_status = previous_data.get('status_label', '').lower()
 
                     print(f"\nOpportunity status changed for lead {lead_id}: {old_status} → {new_status}")
 
