@@ -27,6 +27,13 @@ class WebhookHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests for lead enrollment."""
+        import sys
+        print(f"\n{'='*60}")
+        print(f"POST REQUEST RECEIVED")
+        print(f"Path: {self.path}")
+        print(f"{'='*60}")
+        sys.stdout.flush()
+
         if self.path == '/enroll':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -86,6 +93,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 print(f"\n=== WEBHOOK RECEIVED ===")
                 print(f"Event type: {event}")
                 print(f"Full payload: {json.dumps(data, indent=2)}")
+                sys.stdout.flush()
 
                 # Process opportunity.updated events
                 if event == 'opportunity.updated':
@@ -310,8 +318,11 @@ class WebhookHandler(BaseHTTPRequestHandler):
             }
 
     def log_message(self, format, *args):
-        """Custom log format."""
-        print(f"[{self.log_date_time_string()}] {format % args}")
+        """Custom log format - ensure all requests are logged."""
+        import sys
+        message = f"[{self.log_date_time_string()}] {format % args}"
+        print(message)
+        sys.stdout.flush()  # Force flush to ensure Railway sees it
 
 
 def send_scheduled_emails():
