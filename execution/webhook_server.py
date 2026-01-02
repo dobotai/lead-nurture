@@ -88,17 +88,20 @@ class WebhookHandler(BaseHTTPRequestHandler):
             try:
                 # Parse Close.io webhook payload
                 data = json.loads(post_data.decode('utf-8'))
-                event = data.get('event')
+                event_obj = data.get('event', {})
+                action = event_obj.get('action')
+                object_type = event_obj.get('object_type')
 
                 print(f"\n=== WEBHOOK RECEIVED ===")
-                print(f"Event type: {event}")
+                print(f"Action: {action}")
+                print(f"Object type: {object_type}")
                 print(f"Full payload: {json.dumps(data, indent=2)}")
                 sys.stdout.flush()
 
                 # Process opportunity.updated events
-                if event == 'opportunity.updated':
-                    opp_data = data.get('data', {})
-                    previous_data = data.get('previous_data', {})
+                if action == 'updated' and object_type == 'opportunity':
+                    opp_data = event_obj.get('data', {})
+                    previous_data = event_obj.get('previous_data', {})
                     lead_id = opp_data.get('lead_id')
                     new_status = opp_data.get('status_label', '').lower()
                     old_status = previous_data.get('status_label', '').lower()
@@ -175,7 +178,12 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header('Content-type', 'application/json')
                     self.end_headers()
-                    response = {'status': 'ignored', 'event': event}
+                    response = {
+                        'status': 'ignored',
+                        'action': action,
+                        'object_type': object_type,
+                        'reason': 'Not an opportunity update event'
+                    }
                     self.wfile.write(json.dumps(response).encode('utf-8'))
 
             except Exception as e:
