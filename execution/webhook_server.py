@@ -83,6 +83,10 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 event = data.get('event')
 
+                print(f"\n=== WEBHOOK RECEIVED ===")
+                print(f"Event type: {event}")
+                print(f"Full payload: {json.dumps(data, indent=2)}")
+
                 # Process opportunity.updated events
                 if event == 'opportunity.updated':
                     opp_data = data.get('data', {})
@@ -91,22 +95,31 @@ class WebhookHandler(BaseHTTPRequestHandler):
                     new_status = opp_data.get('status_label', '').lower()
                     old_status = previous_data.get('status_label', '').lower()
 
-                    print(f"\nOpportunity status changed for lead {lead_id}: {old_status} → {new_status}")
+                    print(f"\n=== OPPORTUNITY UPDATE ===")
+                    print(f"Lead ID: {lead_id}")
+                    print(f"Old status: '{old_status}'")
+                    print(f"New status: '{new_status}'")
 
                     # Check if status changed TO "Call Booked"
                     if new_status == 'call booked':
-                        print(f"Call booked! Enrolling lead {lead_id} in nurture workflow")
+                        print(f"\n=== STATUS IS CALL BOOKED ===")
+                        print(f"Enrolling lead {lead_id} in nurture workflow")
 
                         # Get call time from lead activities
+                        print(f"Extracting call time from lead activities...")
                         call_time = self._extract_call_time(lead_id)
+                        print(f"Call time extracted: {call_time}")
 
                         # Enroll lead in nurture workflow
+                        print(f"Creating enrollment object...")
                         enrollment = LeadEnrollment()
+                        print(f"Calling enroll_lead...")
                         result = enrollment.enroll_lead(
                             lead_id=lead_id,
                             call_time=call_time,
                             send_welcome_immediately=True
                         )
+                        print(f"Enrollment result: {json.dumps(result, indent=2)}")
 
                         # Send response
                         self.send_response(200 if result['success'] else 400)
@@ -114,7 +127,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
                         self.end_headers()
                         self.wfile.write(json.dumps(result).encode('utf-8'))
 
-                        print(f"Lead enrolled: {result.get('email', 'unknown')}")
+                        print(f"✓ Lead enrolled: {result.get('email', 'unknown')}")
 
                     # Check if status changed FROM "Call Booked" to anything else
                     elif old_status == 'call booked' and new_status != 'call booked':
@@ -133,10 +146,20 @@ class WebhookHandler(BaseHTTPRequestHandler):
 
                     else:
                         # Status change not relevant to nurture workflow
+                        print(f"\n=== STATUS CHANGE IGNORED ===")
+                        print(f"Reason: Status not relevant to nurture workflow")
+                        print(f"  - new_status == 'call booked'? {new_status == 'call booked'}")
+                        print(f"  - old_status == 'call booked'? {old_status == 'call booked'}")
+
                         self.send_response(200)
                         self.send_header('Content-type', 'application/json')
                         self.end_headers()
-                        response = {'status': 'ignored', 'reason': 'status not relevant'}
+                        response = {
+                            'status': 'ignored',
+                            'reason': 'status not relevant',
+                            'new_status': new_status,
+                            'old_status': old_status
+                        }
                         self.wfile.write(json.dumps(response).encode('utf-8'))
 
                 else:
