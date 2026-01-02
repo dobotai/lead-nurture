@@ -98,20 +98,20 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 print(f"Full payload: {json.dumps(data, indent=2)}")
                 sys.stdout.flush()
 
-                # Process opportunity.updated events
-                if action == 'updated' and object_type == 'opportunity':
+                # Process opportunity created/updated events
+                if object_type == 'opportunity' and action in ['created', 'updated']:
                     opp_data = event_obj.get('data', {})
                     previous_data = event_obj.get('previous_data', {})
                     lead_id = opp_data.get('lead_id')
                     new_status = opp_data.get('status_label', '').lower()
-                    old_status = previous_data.get('status_label', '').lower()
+                    old_status = previous_data.get('status_label', '').lower() if previous_data else ''
 
-                    print(f"\n=== OPPORTUNITY UPDATE ===")
+                    print(f"\n=== OPPORTUNITY {action.upper()} ===")
                     print(f"Lead ID: {lead_id}")
                     print(f"Old status: '{old_status}'")
                     print(f"New status: '{new_status}'")
 
-                    # Check if status changed TO "Call Booked"
+                    # Check if status is "Call Booked" (either new opportunity or status changed)
                     if new_status == 'call booked':
                         print(f"\n=== STATUS IS CALL BOOKED ===")
                         print(f"Enrolling lead {lead_id} in nurture workflow")
