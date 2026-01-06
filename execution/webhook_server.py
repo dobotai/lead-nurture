@@ -333,6 +333,77 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 'error': str(e)
             }
 
+    def _serve_dashboard(self):
+        """Serve the dashboard HTML page."""
+        from dashboard_html import DASHBOARD_HTML
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(DASHBOARD_HTML.encode('utf-8'))
+
+    def _serve_leads_api(self):
+        """Serve leads data as JSON API."""
+        try:
+            state_file = os.path.join(os.path.dirname(__file__), '..', '.tmp', 'lead_nurture_state.json')
+
+            if not os.path.exists(state_file):
+                data = {'total_leads': 0, 'total_emails_sent': 0, 'total_emails_scheduled': 0, 'leads': []}
+            else:
+                with open(state_file, 'r') as f:
+                    state = json.load(f)
+
+                leads_data = []
+                total_emails_sent = 0
+                total_emails_scheduled = 0
+
+                for lead_id, lead_info in state.get('leads', {}).items():
+                    sent_emails = lead_info.get('sent_emails', [])
+                    email_schedule = lead_info.get('email_schedule', {})
+
+                    # Find next scheduled email
+                    next_email = None
+                    for email_type, scheduled_time in email_schedule.items():
+                        if email_type not in sent_emails:
+                            if next_email is None or scheduled_time < next_email['time']:
+                                next_email = {'type': email_type, 'time': scheduled_time}
+
+                    total_emails_sent += len(sent_emails)
+                    total_emails_scheduled += len(email_schedule) - len(sent_emails)
+
+                    leads_data.append({
+                        'lead_id': lead_id,
+                        'name': lead_info.get('name', 'Unknown'),
+                        'email': lead_info.get('email', ''),
+                        'call_time': lead_info.get('call_time', ''),
+                        'booked_at': lead_info.get('booked_at', ''),
+                        'emails_sent': sent_emails,
+                        'emails_sent_count': len(sent_emails),
+                        'total_emails': len(email_schedule),
+                        'next_email': next_email
+                    })
+
+                # Sort by booked_at (most recent first)
+                leads_data.sort(key=lambda x: x['booked_at'], reverse=True)
+
+                data = {
+                    'total_leads': len(leads_data),
+                    'total_emails_sent': total_emails_sent,
+                    'total_emails_scheduled': total_emails_scheduled,
+                    'leads': leads_data
+                }
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(data).encode('utf-8'))
+
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
+
     def log_message(self, format, *args):
         """Custom log format - ensure all requests are logged."""
         import sys
