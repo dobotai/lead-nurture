@@ -26,79 +26,76 @@ class EmailTemplates:
         return template.format(**lead_data)
 
     @staticmethod
-    def get_welcome_email(name: str, call_time: str, call_duration: int = 30) -> Dict[str, str]:
+    def get_email_1(name: str) -> Dict[str, str]:
         """
-        Welcome email sent immediately after booking.
+        Email 1: Sent immediately after booking - Setting expectations.
 
         Args:
             name: Lead's first name
-            call_time: Scheduled call time (formatted)
-            call_duration: Duration in minutes
 
         Returns:
             Dictionary with 'subject', 'html', 'text'
         """
-        subject = f"Your call is confirmed - {call_time}"
+        subject = "[Important] Your Ops Audit Call is Confirmed"
+
+        text = f"""Hey! Doby here.
+
+You booked time because something in your business isn't clicking the way it should.
+
+Not broken enough to panic.
+Not smooth enough to ignore.
+
+Before we talk, I want to set expectations so this doesn't feel like another "agency call."
+
+I'm not here to sell you software.
+I'm not here to pitch AI buzzwords.
+And I'm definitely not here to duct-tape Zapier automations together.
+
+Over the next few days, I'll send a couple short notes explaining:
+
+• how we actually approach automation
+• who this works well for
+• and where it absolutely doesn't
+
+If anything you read sparks a question — reply directly.
+That context makes the call far more useful.
+
+Talk soon,
+Doby"""
 
         html = f"""
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Thanks for booking a call, {name}! 🎉</h2>
+                    <p>Hey! Doby here.</p>
 
-                    <p>We're excited to connect with you. Here are your call details:</p>
+                    <p>You booked time because something in your business isn't clicking the way it should.</p>
 
-                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 5px 0;"><strong>Date & Time:</strong> {call_time}</p>
-                        <p style="margin: 5px 0;"><strong>Duration:</strong> {call_duration} minutes</p>
-                    </div>
+                    <p>Not broken enough to panic.<br>
+                    Not smooth enough to ignore.</p>
 
-                    <h3 style="color: #2c3e50;">What to prepare:</h3>
+                    <p>Before we talk, I want to set expectations so this doesn't feel like another "agency call."</p>
+
+                    <p>I'm not here to sell you software.<br>
+                    I'm not here to pitch AI buzzwords.<br>
+                    And I'm definitely not here to duct-tape Zapier automations together.</p>
+
+                    <p>Over the next few days, I'll send a couple short notes explaining:</p>
+
                     <ul>
-                        <li>Have any questions ready that you'd like to discuss</li>
-                        <li>Be in a quiet space with a stable internet connection</li>
-                        <li>Feel free to share your screen if needed</li>
+                        <li>how we actually approach automation</li>
+                        <li>who this works well for</li>
+                        <li>and where it absolutely doesn't</li>
                     </ul>
 
-                    <p>We'll send you reminders as the call approaches, so you don't miss it.</p>
+                    <p>If anything you read sparks a question — reply directly.<br>
+                    That context makes the call far more useful.</p>
 
-                    <p>Looking forward to speaking with you!</p>
-
-                    <p style="margin-top: 30px;">
-                        Best regards,<br>
-                        <strong>The Team</strong>
-                    </p>
-
-                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #777;">
-                        <p>Need to reschedule? Just reply to this email and we'll help you out.</p>
-                    </div>
+                    <p style="margin-top: 30px;">Talk soon,<br>
+                    Doby</p>
                 </div>
             </body>
         </html>
-        """
-
-        text = f"""
-Thanks for booking a call, {name}!
-
-We're excited to connect with you. Here are your call details:
-
-Date & Time: {call_time}
-Duration: {call_duration} minutes
-
-What to prepare:
-- Have any questions ready that you'd like to discuss
-- Be in a quiet space with a stable internet connection
-- Feel free to share your screen if needed
-
-We'll send you reminders as the call approaches, so you don't miss it.
-
-Looking forward to speaking with you!
-
-Best regards,
-The Team
-
----
-Need to reschedule? Just reply to this email and we'll help you out.
         """
 
         return {
@@ -108,72 +105,90 @@ Need to reschedule? Just reply to this email and we'll help you out.
         }
 
     @staticmethod
-    def get_midpoint_email(name: str, call_time: str) -> Dict[str, str]:
+    def get_email_2(name: str) -> Dict[str, str]:
         """
-        Mid-point follow-up email.
+        Email 2: Sent 6 hours after booking - Will automation actually help?
 
         Args:
             name: Lead's first name
-            call_time: Scheduled call time (formatted)
 
         Returns:
             Dictionary with 'subject', 'html', 'text'
         """
-        subject = f"Looking forward to our call on {call_time}"
+        subject = "Will automation actually improve your operations?"
 
-        html = f"""
+        text = """A reasonable thought you might be having:
+
+"This sounds interesting… but would this actually move the needle?"
+
+That skepticism is healthy.
+
+Most automation fails because it's built after the business is already messy — or worse, without understanding how decisions are actually made.
+
+Our starting point isn't tools.
+It's behavior.
+
+We look at:
+
+• where humans are making repetitive decisions
+• where information gets lost or delayed
+• where the business slows down as volume increases
+
+Only then do we design systems around it.
+
+Even if we never build a single automation together, founders usually leave the first phase with a much clearer understanding of:
+
+• what's causing friction
+• what's draining their time
+• and what not to fix yet
+
+That clarity alone is often the unlock.
+
+More context coming next.
+
+— Doby"""
+
+        html = """
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Hi {name},</h2>
+                    <p>A reasonable thought you might be having:</p>
 
-                    <p>Just wanted to touch base before our upcoming call on <strong>{call_time}</strong>.</p>
+                    <p><em>"This sounds interesting… but would this actually move the needle?"</em></p>
 
-                    <p>In the meantime, here are some resources you might find helpful:</p>
+                    <p>That skepticism is healthy.</p>
+
+                    <p>Most automation fails because it's built after the business is already messy — or worse, without understanding how decisions are actually made.</p>
+
+                    <p>Our starting point isn't tools.<br>
+                    It's behavior.</p>
+
+                    <p>We look at:</p>
 
                     <ul>
-                        <li><a href="#" style="color: #3498db;">Case Study: How we helped Company X</a></li>
-                        <li><a href="#" style="color: #3498db;">Our approach to solving [problem]</a></li>
-                        <li><a href="#" style="color: #3498db;">Frequently Asked Questions</a></li>
+                        <li>where humans are making repetitive decisions</li>
+                        <li>where information gets lost or delayed</li>
+                        <li>where the business slows down as volume increases</li>
                     </ul>
 
-                    <p>Feel free to review these at your leisure. We'll cover everything during our call, but these might give you some additional context.</p>
+                    <p>Only then do we design systems around it.</p>
 
-                    <p>See you soon!</p>
+                    <p>Even if we never build a single automation together, founders usually leave the first phase with a much clearer understanding of:</p>
 
-                    <p style="margin-top: 30px;">
-                        Best regards,<br>
-                        <strong>The Team</strong>
-                    </p>
+                    <ul>
+                        <li>what's causing friction</li>
+                        <li>what's draining their time</li>
+                        <li>and what not to fix yet</li>
+                    </ul>
 
-                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #777;">
-                        <p>Have questions before the call? Just reply to this email.</p>
-                    </div>
+                    <p>That clarity alone is often the unlock.</p>
+
+                    <p>More context coming next.</p>
+
+                    <p style="margin-top: 30px;">— Doby</p>
                 </div>
             </body>
         </html>
-        """
-
-        text = f"""
-Hi {name},
-
-Just wanted to touch base before our upcoming call on {call_time}.
-
-In the meantime, here are some resources you might find helpful:
-
-- Case Study: How we helped Company X
-- Our approach to solving [problem]
-- Frequently Asked Questions
-
-Feel free to review these at your leisure. We'll cover everything during our call, but these might give you some additional context.
-
-See you soon!
-
-Best regards,
-The Team
-
----
-Have questions before the call? Just reply to this email.
         """
 
         return {
@@ -183,88 +198,90 @@ Have questions before the call? Just reply to this email.
         }
 
     @staticmethod
-    def get_day_before_email(name: str, call_time: str, meeting_link: str = None) -> Dict[str, str]:
+    def get_email_3(name: str) -> Dict[str, str]:
         """
-        Day-before reminder email.
+        Email 3: Sent 12 hours after booking - Who DobotAI is built for.
 
         Args:
             name: Lead's first name
-            call_time: Scheduled call time (formatted)
-            meeting_link: Optional Zoom/Meet link
 
         Returns:
             Dictionary with 'subject', 'html', 'text'
         """
-        subject = f"Reminder: Our call tomorrow at {call_time}"
+        subject = "Who DobotAI is built for (and who it isn't)"
 
-        meeting_section = ""
-        if meeting_link:
-            meeting_section = f"""
-                <div style="background-color: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <p style="margin: 0;"><strong>Meeting Link:</strong><br>
-                    <a href="{meeting_link}" style="color: #2e7d32; font-size: 16px;">{meeting_link}</a></p>
-                </div>
-            """
+        text = """People always ask what industries we work with.
 
-        html = f"""
+The truth?
+Industry matters less than operational maturity.
+
+This works best if:
+
+• leads are already coming in
+• delivery is proven
+• and the business is starting to feel heavier as it grows
+
+It works especially well when:
+
+• the founder is still too involved
+• the CRM doesn't reflect reality
+• follow-ups rely on memory
+• or your team keeps asking for "one more person"
+
+This does not work if:
+
+• you're still figuring out product-market fit
+• you want quick hacks
+• or you're allergic to structure
+
+We build systems meant to last — not automations you babysit.
+
+If you're nodding along, the call will make sense.
+
+— Doby"""
+
+        html = """
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Hi {name},</h2>
+                    <p>People always ask what industries we work with.</p>
 
-                    <p>This is a friendly reminder about our call scheduled for tomorrow:</p>
+                    <p>The truth?<br>
+                    Industry matters less than operational maturity.</p>
 
-                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 5px 0; font-size: 18px;"><strong>{call_time}</strong></p>
-                    </div>
+                    <p><strong>This works best if:</strong></p>
 
-                    {meeting_section}
-
-                    <h3 style="color: #2c3e50;">Quick preparation checklist:</h3>
                     <ul>
-                        <li>✓ Confirm you're still available (reply if you need to reschedule)</li>
-                        <li>✓ Have your questions ready</li>
-                        <li>✓ Test your audio/video setup</li>
-                        <li>✓ Be in a quiet location</li>
+                        <li>leads are already coming in</li>
+                        <li>delivery is proven</li>
+                        <li>and the business is starting to feel heavier as it grows</li>
                     </ul>
 
-                    <p>We're looking forward to connecting with you!</p>
+                    <p><strong>It works especially well when:</strong></p>
 
-                    <p style="margin-top: 30px;">
-                        Best regards,<br>
-                        <strong>The Team</strong>
-                    </p>
+                    <ul>
+                        <li>the founder is still too involved</li>
+                        <li>the CRM doesn't reflect reality</li>
+                        <li>follow-ups rely on memory</li>
+                        <li>or your team keeps asking for "one more person"</li>
+                    </ul>
 
-                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #777;">
-                        <p>Need to reschedule? Reply to this email or contact us directly.</p>
-                    </div>
+                    <p><strong>This does not work if:</strong></p>
+
+                    <ul>
+                        <li>you're still figuring out product-market fit</li>
+                        <li>you want quick hacks</li>
+                        <li>or you're allergic to structure</li>
+                    </ul>
+
+                    <p>We build systems meant to last — not automations you babysit.</p>
+
+                    <p>If you're nodding along, the call will make sense.</p>
+
+                    <p style="margin-top: 30px;">— Doby</p>
                 </div>
             </body>
         </html>
-        """
-
-        text = f"""
-Hi {name},
-
-This is a friendly reminder about our call scheduled for tomorrow:
-
-{call_time}
-
-{"Meeting Link: " + meeting_link if meeting_link else ""}
-
-Quick preparation checklist:
-✓ Confirm you're still available (reply if you need to reschedule)
-✓ Have your questions ready
-✓ Test your audio/video setup
-✓ Be in a quiet location
-
-We're looking forward to connecting with you!
-
-Best regards,
-The Team
-
----
-Need to reschedule? Reply to this email or contact us directly.
         """
 
         return {
@@ -274,67 +291,159 @@ Need to reschedule? Reply to this email or contact us directly.
         }
 
     @staticmethod
-    def get_hour_before_email(name: str, call_time: str, meeting_link: str = None) -> Dict[str, str]:
+    def get_email_4(name: str) -> Dict[str, str]:
         """
-        One-hour-before reminder email.
+        Email 4: Sent 18 hours after booking - Why systems don't break.
 
         Args:
             name: Lead's first name
-            call_time: Scheduled call time (formatted)
-            meeting_link: Optional Zoom/Meet link
 
         Returns:
             Dictionary with 'subject', 'html', 'text'
         """
-        subject = f"Starting in 1 hour: Our call at {call_time}"
+        subject = "Why our automation systems don't break as you scale"
 
-        meeting_section = ""
-        if meeting_link:
-            meeting_section = f"""
-                <div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
-                    <p style="margin: 0; font-size: 16px;"><strong>Join the call:</strong><br>
-                    <a href="{meeting_link}" style="color: #f57c00; font-size: 18px; font-weight: bold;">{meeting_link}</a></p>
-                </div>
-            """
+        text = """Most automations follow rules.
 
-        html = f"""
+Rules work… until reality changes.
+
+We design systems that account for:
+
+• missing information
+• edge cases
+• delays
+• human inconsistency
+
+Instead of rigid triggers, we build logic that:
+
+• evaluates context
+• chooses actions
+• and escalates when needed
+
+That's why our systems don't fall apart when:
+
+• volume increases
+• team members change
+• or processes evolve
+
+I'll show you real examples of this on the call — not slides, not theory.
+
+Just how it actually works.
+
+— Doby"""
+
+        html = """
         <html>
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Hi {name},</h2>
+                    <p>Most automations follow rules.</p>
 
-                    <p style="font-size: 18px;">Our call starts in <strong>1 hour</strong>!</p>
+                    <p>Rules work… until reality changes.</p>
 
-                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 5px 0; font-size: 20px;"><strong>{call_time}</strong></p>
-                    </div>
+                    <p>We design systems that account for:</p>
 
-                    {meeting_section}
+                    <ul>
+                        <li>missing information</li>
+                        <li>edge cases</li>
+                        <li>delays</li>
+                        <li>human inconsistency</li>
+                    </ul>
 
-                    <p>See you soon!</p>
+                    <p>Instead of rigid triggers, we build logic that:</p>
 
-                    <p style="margin-top: 30px;">
-                        Best regards,<br>
-                        <strong>The Team</strong>
-                    </p>
+                    <ul>
+                        <li>evaluates context</li>
+                        <li>chooses actions</li>
+                        <li>and escalates when needed</li>
+                    </ul>
+
+                    <p>That's why our systems don't fall apart when:</p>
+
+                    <ul>
+                        <li>volume increases</li>
+                        <li>team members change</li>
+                        <li>or processes evolve</li>
+                    </ul>
+
+                    <p>I'll show you real examples of this on the call — not slides, not theory.</p>
+
+                    <p>Just how it actually works.</p>
+
+                    <p style="margin-top: 30px;">— Doby</p>
                 </div>
             </body>
         </html>
         """
 
-        text = f"""
-Hi {name},
+        return {
+            'subject': subject,
+            'html': html.strip(),
+            'text': text.strip()
+        }
 
-Our call starts in 1 hour!
+    @staticmethod
+    def get_email_5(name: str) -> Dict[str, str]:
+        """
+        Email 5: Sent 24 hours after booking - What we'll cover on the call.
 
-{call_time}
+        Args:
+            name: Lead's first name
 
-{"Join the call: " + meeting_link if meeting_link else ""}
+        Returns:
+            Dictionary with 'subject', 'html', 'text'
+        """
+        subject = "What we'll cover on our DobotAI call"
 
-See you soon!
+        text = """Here's how I think about our call:
 
-Best regards,
-The Team
+It's not a pitch.
+It's a working session.
+
+We'll:
+
+• walk through how things operate today
+• identify where decisions pile up
+• and see whether automation creates real leverage
+
+If there's a fit, I'll outline a path forward.
+If there isn't, you'll still leave with clarity on what's holding things back.
+
+No pressure either way.
+
+Come ready to talk honestly about what feels heavier than it should.
+
+Looking forward to it,
+Doby"""
+
+        html = """
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <p>Here's how I think about our call:</p>
+
+                    <p>It's not a pitch.<br>
+                    It's a working session.</p>
+
+                    <p><strong>We'll:</strong></p>
+
+                    <ul>
+                        <li>walk through how things operate today</li>
+                        <li>identify where decisions pile up</li>
+                        <li>and see whether automation creates real leverage</li>
+                    </ul>
+
+                    <p>If there's a fit, I'll outline a path forward.<br>
+                    If there isn't, you'll still leave with clarity on what's holding things back.</p>
+
+                    <p>No pressure either way.</p>
+
+                    <p>Come ready to talk honestly about what feels heavier than it should.</p>
+
+                    <p style="margin-top: 30px;">Looking forward to it,<br>
+                    Doby</p>
+                </div>
+            </body>
+        </html>
         """
 
         return {
@@ -349,45 +458,28 @@ def main():
     templates = EmailTemplates()
 
     # Test data
-    test_data = {
-        'name': 'John',
-        'call_time': 'Monday, Jan 15 at 2:00 PM EST',
-        'call_duration': 30,
-        'meeting_link': 'https://zoom.us/j/123456789'
-    }
+    test_name = 'John'
 
-    print("=== Welcome Email ===")
-    welcome = templates.get_welcome_email(
-        test_data['name'],
-        test_data['call_time'],
-        test_data['call_duration']
-    )
-    print(f"Subject: {welcome['subject']}\n")
-    print("HTML Preview:")
-    print(welcome['html'][:200] + "...\n")
+    print("=== Email 1: Call Confirmed ===")
+    email_1 = templates.get_email_1(test_name)
+    print(f"Subject: {email_1['subject']}\n")
+    print(f"Text preview:\n{email_1['text'][:200]}...\n")
 
-    print("\n=== Midpoint Email ===")
-    midpoint = templates.get_midpoint_email(
-        test_data['name'],
-        test_data['call_time']
-    )
-    print(f"Subject: {midpoint['subject']}\n")
+    print("\n=== Email 2: Will Automation Help? ===")
+    email_2 = templates.get_email_2(test_name)
+    print(f"Subject: {email_2['subject']}\n")
 
-    print("\n=== Day Before Email ===")
-    day_before = templates.get_day_before_email(
-        test_data['name'],
-        test_data['call_time'],
-        test_data['meeting_link']
-    )
-    print(f"Subject: {day_before['subject']}\n")
+    print("\n=== Email 3: Who It's For ===")
+    email_3 = templates.get_email_3(test_name)
+    print(f"Subject: {email_3['subject']}\n")
 
-    print("\n=== Hour Before Email ===")
-    hour_before = templates.get_hour_before_email(
-        test_data['name'],
-        test_data['call_time'],
-        test_data['meeting_link']
-    )
-    print(f"Subject: {hour_before['subject']}\n")
+    print("\n=== Email 4: Why Systems Don't Break ===")
+    email_4 = templates.get_email_4(test_name)
+    print(f"Subject: {email_4['subject']}\n")
+
+    print("\n=== Email 5: What We'll Cover ===")
+    email_5 = templates.get_email_5(test_name)
+    print(f"Subject: {email_5['subject']}\n")
 
 
 if __name__ == "__main__":

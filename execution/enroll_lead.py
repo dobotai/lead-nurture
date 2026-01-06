@@ -64,23 +64,24 @@ class LeadEnrollment:
             json.dump(logs, f, indent=2)
 
     def _calculate_email_times(self, call_time: datetime, booked_time: datetime) -> Dict[str, datetime]:
-        """Calculate when each email should be sent - TEST MODE: 1 email per minute."""
-        now = datetime.now(timezone.utc)
-
+        """Calculate when each email should be sent - PRODUCTION: 1 email every 6 hours."""
         email_times = {}
 
-        # TEST SCHEDULE: Send emails every minute for testing
-        # Welcome: immediately
-        email_times['welcome'] = booked_time + timedelta(seconds=10)
+        # PRODUCTION SCHEDULE: Send emails every 6 hours
+        # Email 1: Immediately (within 10 seconds)
+        email_times['email_1'] = booked_time + timedelta(seconds=10)
 
-        # Minute 1: First follow-up
-        email_times['midpoint'] = now + timedelta(minutes=1)
+        # Email 2: 6 hours after booking
+        email_times['email_2'] = booked_time + timedelta(hours=6)
 
-        # Minute 2: Second follow-up
-        email_times['day_before'] = now + timedelta(minutes=2)
+        # Email 3: 12 hours after booking
+        email_times['email_3'] = booked_time + timedelta(hours=12)
 
-        # Minute 3: Final reminder
-        email_times['hour_before'] = now + timedelta(minutes=3)
+        # Email 4: 18 hours after booking
+        email_times['email_4'] = booked_time + timedelta(hours=18)
+
+        # Email 5: 24 hours after booking
+        email_times['email_5'] = booked_time + timedelta(hours=24)
 
         return email_times
 
@@ -187,15 +188,9 @@ class LeadEnrollment:
         print(f"Call scheduled: {call_time_dt.isoformat()}")
         print(f"Email schedule calculated")
 
-        # Send welcome email immediately if requested
+        # Send email_1 immediately if requested
         if send_welcome_immediately:
-            formatted_call_time = self._format_call_time(call_time_dt)
-
-            email_data = self.templates.get_welcome_email(
-                name=name,
-                call_time=formatted_call_time,
-                call_duration=call_duration
-            )
+            email_data = self.templates.get_email_1(name=name)
 
             success = self.email_sender.send_email(
                 to_email=email,
@@ -206,17 +201,17 @@ class LeadEnrollment:
             )
 
             if success:
-                # Mark welcome as sent
-                state['leads'][lead_id]['sent_emails'].append('welcome')
+                # Mark email_1 as sent
+                state['leads'][lead_id]['sent_emails'].append('email_1')
                 self._save_state(state)
 
                 # Log to Close.io
                 self.close_io.add_note_to_lead(
                     lead_id,
-                    f"Lead nurture email sent: welcome - {email_data['subject']}"
+                    f"Lead nurture email sent: email_1 - {email_data['subject']}"
                 )
 
-                print(f"Welcome email sent to {email}")
+                print(f"Email 1 sent to {email}")
 
                 return {
                     'success': True,
@@ -224,7 +219,7 @@ class LeadEnrollment:
                     'email': email,
                     'name': name,
                     'call_time': call_time_dt.isoformat(),
-                    'welcome_email_sent': True,
+                    'email_1_sent': True,
                     'emails_scheduled': list(email_times.keys())
                 }
             else:
@@ -234,8 +229,8 @@ class LeadEnrollment:
                     'email': email,
                     'name': name,
                     'call_time': call_time_dt.isoformat(),
-                    'welcome_email_sent': False,
-                    'error': 'Enrollment succeeded but welcome email failed',
+                    'email_1_sent': False,
+                    'error': 'Enrollment succeeded but email 1 failed',
                     'emails_scheduled': list(email_times.keys())
                 }
 
@@ -245,7 +240,7 @@ class LeadEnrollment:
             'email': email,
             'name': name,
             'call_time': call_time_dt.isoformat(),
-            'welcome_email_sent': False,
+            'email_1_sent': False,
             'emails_scheduled': list(email_times.keys())
         }
 

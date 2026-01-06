@@ -366,8 +366,8 @@ def send_scheduled_emails():
                     if email_type in sent_emails:
                         continue
 
-                    # Skip welcome (sent immediately on enrollment)
-                    if email_type == 'welcome':
+                    # Skip email_1 (sent immediately on enrollment)
+                    if email_type == 'email_1':
                         continue
 
                     # Parse scheduled time
@@ -377,17 +377,15 @@ def send_scheduled_emails():
                     if now >= scheduled_time:
                         print(f"\nSending {email_type} email to {lead_data.get('email')}")
 
-                        # Format call time
-                        call_time = datetime.fromisoformat(lead_data['call_time'].replace('Z', '+00:00'))
-                        formatted_call_time = call_time.strftime("%A, %b %d at %I:%M %p %Z")
-
-                        # Get template
-                        if email_type == 'midpoint':
-                            email_data = templates.get_midpoint_email(lead_data['name'], formatted_call_time)
-                        elif email_type == 'day_before':
-                            email_data = templates.get_day_before_email(lead_data['name'], formatted_call_time)
-                        elif email_type == 'hour_before':
-                            email_data = templates.get_hour_before_email(lead_data['name'], formatted_call_time)
+                        # Get template based on email type
+                        if email_type == 'email_2':
+                            email_data = templates.get_email_2(lead_data['name'])
+                        elif email_type == 'email_3':
+                            email_data = templates.get_email_3(lead_data['name'])
+                        elif email_type == 'email_4':
+                            email_data = templates.get_email_4(lead_data['name'])
+                        elif email_type == 'email_5':
+                            email_data = templates.get_email_5(lead_data['name'])
                         else:
                             continue
 
