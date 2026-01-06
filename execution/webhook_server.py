@@ -206,14 +206,6 @@ class WebhookHandler(BaseHTTPRequestHandler):
             response = {'status': 'ok', 'service': 'lead-nurture-webhook'}
             self.wfile.write(json.dumps(response).encode('utf-8'))
 
-        elif self.path == '/' or self.path == '/dashboard':
-            # Serve dashboard
-            self._serve_dashboard()
-
-        elif self.path == '/api/leads':
-            # Serve leads API
-            self._serve_leads_api()
-
         else:
             self.send_response(404)
             self.end_headers()
@@ -226,6 +218,15 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self.end_headers()
             response = {'status': 'ok', 'service': 'lead-nurture-webhook'}
             self.wfile.write(json.dumps(response).encode('utf-8'))
+
+        elif self.path == '/' or self.path == '/dashboard':
+            # Serve dashboard
+            self._serve_dashboard()
+
+        elif self.path == '/api/leads':
+            # Serve leads API
+            self._serve_leads_api()
+
         else:
             self.send_response(404)
             self.end_headers()
