@@ -23,7 +23,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubunt
 .lead-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
 .lead-info h3{color:#2d3748;font-size:18px;margin-bottom:4px}
 .lead-info p{color:#718096;font-size:14px}
+.lead-actions{display:flex;gap:8px;align-items:center}
 .lead-badge{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#48bb78;color:white}
+.cancel-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;background:#e53e3e;color:white;border:none;cursor:pointer;transition:background 0.2s}
+.cancel-btn:hover{background:#c53030}
+.cancel-btn:disabled{background:#cbd5e0;cursor:not-allowed}
 .email-progress{display:flex;gap:8px;margin-top:12px}
 .email-step{flex:1;height:8px;background:#e2e8f0;border-radius:4px}
 .email-step.sent{background:#48bb78}
@@ -45,6 +49,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubunt
 <script>
 function formatDate(d){const dt=new Date(d);return dt.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true})}
 function formatRelative(d){const dt=new Date(d),now=new Date(),diff=dt-now,m=Math.floor(diff/60000),h=Math.floor(diff/3600000);return diff<0?'Past':m<60?`${m}m`:h<24?`${h}h`:`${Math.floor(diff/86400000)}d`}
+function cancelLead(leadId,btn){
+if(!confirm('Cancel this lead nurture sequence? Scheduled emails will stop.')){return}
+btn.disabled=true;
+btn.textContent='Cancelling...';
+fetch('/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lead_id:leadId})})
+.then(r=>r.json())
+.then(data=>{
+if(data.success){alert('Lead sequence cancelled successfully');loadLeads()}
+else{alert('Error: '+data.error);btn.disabled=false;btn.textContent='Cancel'}
+})
+.catch(e=>{alert('Error: '+e.message);btn.disabled=false;btn.textContent='Cancel'})}
 function renderLeads(data){
 const list=document.getElementById('leads-list');
 document.getElementById('active-count').textContent=data.total_leads;
@@ -52,11 +67,13 @@ document.getElementById('emails-sent').textContent=data.total_emails_sent;
 document.getElementById('emails-scheduled').textContent=data.total_emails_scheduled;
 if(!data.leads||data.leads.length===0){list.innerHTML='<div class="empty-state"><h3>No active leads</h3><p>Leads will appear when enrolled</p></div>';return}
 list.innerHTML=data.leads.map(l=>`<div class="lead-card"><div class="lead-header"><div class="lead-info"><h3>${l.name}</h3><p>${l.email}</p></div>
-<span class="lead-badge">${l.emails_sent_count}/5 sent</span></div>
+<div class="lead-actions"><span class="lead-badge">${l.emails_sent_count}/5 sent</span>
+<button class="cancel-btn" onclick="cancelLead('${l.lead_id}',this)">Cancel</button></div></div>
 <div class="email-progress">${[1,2,3,4,5].map(n=>`<div class="email-step ${l.emails_sent.includes('email_'+n)?'sent':''}"></div>`).join('')}</div>
 <div class="email-details"><div class="email-detail"><div class="label">Enrolled</div><div class="value">${formatDate(l.booked_at)}</div></div>
 <div class="email-detail"><div class="label">Call Time</div><div class="value">${formatDate(l.call_time)}</div></div>
 <div class="email-detail"><div class="label">Next Email</div><div class="value">${l.next_email?formatRelative(l.next_email.time):'None'}</div></div></div></div>`).join('')}
-fetch('/api/leads').then(r=>r.json()).then(renderLeads).catch(e=>{list.innerHTML='<div class="empty-state"><h3>Error</h3><p>'+e.message+'</p></div>'});
-setInterval(()=>fetch('/api/leads').then(r=>r.json()).then(renderLeads),30000);
+function loadLeads(){fetch('/api/leads').then(r=>r.json()).then(renderLeads).catch(e=>{document.getElementById('leads-list').innerHTML='<div class="empty-state"><h3>Error</h3><p>'+e.message+'</p></div>'})}
+loadLeads();
+setInterval(loadLeads,30000);
 </script></body></html>"""

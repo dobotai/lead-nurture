@@ -198,6 +198,39 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(error_response).encode('utf-8'))
                 print(f"\nClose.io webhook error: {str(e)}")
 
+        elif self.path == '/cancel':
+            # Cancel lead nurture sequence
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+
+            try:
+                data = json.loads(post_data.decode('utf-8'))
+                lead_id = data.get('lead_id')
+
+                if not lead_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'lead_id required'}).encode('utf-8'))
+                    return
+
+                # Cancel the lead sequence
+                result = self._cancel_lead_sequence(lead_id)
+
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode('utf-8'))
+
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                error_response = {'error': str(e)}
+                self.wfile.write(json.dumps(error_response).encode('utf-8'))
+                print(f"\nCancel error: {str(e)}")
+                sys.stdout.flush()
+
         elif self.path == '/health':
             # Health check endpoint
             self.send_response(200)
@@ -404,6 +437,46 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
+
+    def _cancel_lead_sequence(self, lead_id: str):
+        """Cancel a lead's nurture sequence by removing them from state."""
+        state_file = os.path.join(os.path.dirname(__file__), '..', '.tmp', 'lead_nurture_state.json')
+
+        try:
+            if not os.path.exists(state_file):
+                return {'success': False, 'error': 'No leads found'}
+
+            with open(state_file, 'r') as f:
+                state = json.load(f)
+
+            if lead_id not in state.get('leads', {}):
+                return {'success': False, 'error': 'Lead not found'}
+
+            lead_info = state['leads'][lead_id]
+            lead_name = lead_info.get('name', 'Unknown')
+
+            # Remove lead from state
+            del state['leads'][lead_id]
+
+            # Save updated state
+            with open(state_file, 'w') as f:
+                json.dump(state, f, indent=2)
+
+            print(f"\n=== LEAD SEQUENCE CANCELLED ===")
+            print(f"Lead: {lead_name} ({lead_id})")
+            print(f"Remaining leads: {len(state['leads'])}")
+            sys.stdout.flush()
+
+            return {
+                'success': True,
+                'message': f'Cancelled nurture sequence for {lead_name}',
+                'lead_id': lead_id
+            }
+
+        except Exception as e:
+            print(f"\nError cancelling lead sequence: {str(e)}")
+            sys.stdout.flush()
+            return {'success': False, 'error': str(e)}
 
     def log_message(self, format, *args):
         """Custom log format - ensure all requests are logged."""
